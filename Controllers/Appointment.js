@@ -1,5 +1,5 @@
 // controllers/appointmentController.js
-const Appointment = require('../models/Appointment');
+const Appointment = require('../Models/AppointmentModel.js');
 const User = require('../models/User');
 
 // @desc    Create new appointment
