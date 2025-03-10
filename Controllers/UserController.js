@@ -1,57 +1,79 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+import User from '../Models/UserModel.js';
+import jwt from 'jsonwebtoken';
 
-const UserSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Please provide a name'],
-  },
-  email: {
-    type: String,
-    required: [true, 'Please provide an email'],
-    unique: true,
-    match: [
-      /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/,
-      'Please provide a valid email',
-    ],
-  },
-  password: {
-    type: String,
-    required: [true, 'Please add a password'],
-    minlength: 6,
-    select: false,
-  },
-  role: {
-    type: String,
-    enum: ['patient', 'doctor', 'admin'],
-    default: 'patient',
-  },
-  healthData: {
-    heartRate: { type: Number },
-    bloodPressure: { type: String },
-    temperature: { type: Number },
-    oxygenLevel: { type: Number },
-    weight: { type: Number },
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
-
-// Encrypt password using bcrypt
-UserSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    next();
+// @desc    Register user
+// @route   POST /api/auth/register
+// @access  Public
+export const register = async (req, res) => {
+  try {
+    const user = await User.create(req.body);
+    
+    // Create token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRE
+    });
+    
+    res.status(201).json({
+      success: true,
+      token
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
   }
-
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-});
-
-// Match user entered password to hashed password in database
-UserSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
 };
 
-export default mongoose.model('User', UserSchema);
+// @desc    Login user
+// @route   POST /api/auth/login
+// @access  Public
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // Validate email & password
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'Please provide email and password' });
+    }
+    
+    // Check for user
+    const user = await User.findOne({ email }).select('+password');
+    
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+    
+    // Check if password matches
+    const isMatch = await user.matchPassword(password);
+    
+    if (!isMatch) {
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+    
+    // Create token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRE
+    });
+    
+    res.status(200).json({
+      success: true,
+      token
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// @desc    Get current logged in user
+// @route   GET /api/auth/me
+// @access  Private
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
