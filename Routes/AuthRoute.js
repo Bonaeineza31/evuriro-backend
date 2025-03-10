@@ -1,6 +1,6 @@
 import express from 'express';
 import { register, login, getMe } from '../Controllers/AuthController.js';  // Note the .js extension
-import { protect } from '../Middleware/Authorization.js';  // Note the .js extension
+import { protect } from '../Middlewares/Authorization.js';  // Note the .js extension
 
 const Authorization = express.Router();
 
