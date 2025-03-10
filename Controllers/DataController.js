@@ -1,10 +1,9 @@
-// controllers/healthDataController.js
-const User = require('../Models/UserModel');
+import User from '../Models/UserModel.js';
 
 // @desc    Update user health data
 // @route   PUT /api/health/update
 // @access  Private
-exports.updateHealthData = async (req, res) => {
+export const updateHealthData = async (req, res) => {
   try {
     const { heartRate, bloodPressure, temperature, oxygenLevel, weight } = req.body;
     
@@ -34,7 +33,7 @@ exports.updateHealthData = async (req, res) => {
 // @desc    Get user health data
 // @route   GET /api/health
 // @access  Private
-exports.getHealthData = async (req, res) => {
+export const getHealthData = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     

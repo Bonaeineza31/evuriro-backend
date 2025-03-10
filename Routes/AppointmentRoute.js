@@ -7,9 +7,9 @@ import {
   createAppointment,
   updateAppointment,
   deleteAppointment
-} from '../controllers/appointmentController.js';
+} from '../Controller/Appointment.js';
 
-import { protect } from '../middleware/authMiddleware.js';
+import { protect } from '../Middleware/Authorization.js';
 
 const Appointment = express.Router();
 
