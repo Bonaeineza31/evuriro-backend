@@ -1,6 +1,5 @@
 // routes/authRoutes.js
 import express from 'express';
-const express = require('express');
 const { register, login, getMe } = require('../Controllers/AuthController');
 const { protect } = require('../Middleware/Authorization');
 
