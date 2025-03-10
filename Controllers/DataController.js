@@ -1,5 +1,5 @@
 // controllers/healthDataController.js
-const User = require('../models/User');
+const User = require('../Models/UserModel');
 
 // @desc    Update user health data
 // @route   PUT /api/health/update
