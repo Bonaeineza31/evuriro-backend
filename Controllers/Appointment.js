@@ -1,6 +1,6 @@
 // controllers/appointmentController.js
 const Appointment = require('../Models/AppointmentModel.js');
-const User = require('../models/User');
+const User = require('../Models/UserModel.js');
 
 // @desc    Create new appointment
 // @route   POST /api/appointments
