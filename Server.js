@@ -3,7 +3,9 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
-
+const db_user = process.env.DB_USER;
+const db_name = process.env.DB_NAME;
+const db_pass = process.env.DB_PASS;
 
 // Load environment variables
 dotenv.config();
@@ -22,10 +24,10 @@ mongoose.connect(process.env.MONGODB_URI)
   .catch(err => console.error('Could not connect to MongoDB', err));
 
 // Import routes
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
-const appointmentRoutes = require('./routes/appointmentRoutes');
-const healthDataRoutes = require('./routes/healthDataRoutes');
+const authRoutes = require('./Routes/AuthRoute');
+const userRoutes = require('./Routes/UserRoute');
+const appointmentRoutes = require('./Routes/AppointmentRoute');
+const healthDataRoutes = require('./Routes/DataRoute');
 
 // Use routes
 app.use('/api/auth', authRoutes);
