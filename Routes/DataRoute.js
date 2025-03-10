@@ -4,9 +4,9 @@ import express from 'express';
 const { updateHealthData, getHealthData } = require('../controllers/healthDataController');
 const { protect } = require('../middleware/authMiddleware');
 
-const router = express.Router();
+const Data = express.Router();
 
-router.route('/').get(protect, getHealthData);
-router.route('/update').put(protect, updateHealthData);
+Data.route('/').get(protect, getHealthData);
+Data.route('/update').put(protect, updateHealthData);
 
-module.exports = router;
+export default Data;

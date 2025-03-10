@@ -3,10 +3,10 @@ import express from 'express';
 const { register, login, getMe } = require('../Controllers/AuthController');
 const { protect } = require('../Middleware/Authorization');
 
-const router = express.Router();
+const Authorization = express.Router();
 
-router.post('/register', register);
-router.post('/login', login);
-router.get('/me', protect, getMe);
+Authorization.post('/register', register);
+Authorization.post('/login', login);
+Authorization.get('/me', protect, getMe);
 
-module.exports = router;
+export default Authorization;

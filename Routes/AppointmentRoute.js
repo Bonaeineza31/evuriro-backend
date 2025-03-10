@@ -11,9 +11,9 @@ const {
 
 const { protect } = require('../middleware/authMiddleware');
 
-const router = express.Router();
+const Appointment = express.Router();
 
-router
+Appointment
   .route('/')
   .get(protect, getAppointments)
   .post(protect, createAppointment);
@@ -24,4 +24,6 @@ router
   .put(protect, updateAppointment)
   .delete(protect, deleteAppointment);
 
-module.exports = router;
+// module.exports = router;
+
+export default Appointment;
