@@ -1,8 +1,7 @@
 // routes/healthDataRoutes.js
 import express from 'express';
-
-const { updateHealthData, getHealthData } = require('../controllers/healthDataController');
-const { protect } = require('../middleware/authMiddleware');
+import { updateHealthData, getHealthData } from '../controllers/healthDataController.js';
+import { protect } from '../middleware/authMiddleware.js';
 
 const Data = express.Router();
 

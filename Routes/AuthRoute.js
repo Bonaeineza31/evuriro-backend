@@ -1,7 +1,6 @@
-// routes/authRoutes.js
 import express from 'express';
-const { register, login, getMe } = require('../Controllers/AuthController');
-const { protect } = require('../Middleware/Authorization');
+import { register, login, getMe } from '../Controllers/AuthController.js';  // Note the .js extension
+import { protect } from '../Middleware/Authorization.js';  // Note the .js extension
 
 const Authorization = express.Router();
 

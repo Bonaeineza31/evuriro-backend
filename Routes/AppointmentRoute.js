@@ -1,15 +1,15 @@
 // routes/appointmentRoutes.js
 import express from 'express';
 
-const {
+import {
   getAppointments,
   getAppointment,
   createAppointment,
   updateAppointment,
   deleteAppointment
-} = require('../controllers/appointmentController');
+} from '../controllers/appointmentController.js';
 
-const { protect } = require('../middleware/authMiddleware');
+import { protect } from '../middleware/authMiddleware.js';
 
 const Appointment = express.Router();
 
@@ -18,12 +18,10 @@ Appointment
   .get(protect, getAppointments)
   .post(protect, createAppointment);
 
-router
+Appointment // This was 'router' which is undefined - changed to 'Appointment'
   .route('/:id')
   .get(protect, getAppointment)
   .put(protect, updateAppointment)
   .delete(protect, deleteAppointment);
-
-// module.exports = router;
 
 export default Appointment;
