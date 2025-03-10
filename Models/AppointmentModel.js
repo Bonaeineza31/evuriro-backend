@@ -1,4 +1,6 @@
 // models/Appointment.js
+import mongoose from "mongoose";
+
 const mongoose = require('mongoose');
 
 const AppointmentSchema = new mongoose.Schema({
