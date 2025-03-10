@@ -1,11 +1,11 @@
 // controllers/appointmentController.js
-const Appointment = require('../Models/AppointmentModel.js');
-const User = require('../Models/UserModel.js');
+import Appointment from '../Models/AppointmentModel.js';
+import User from '../Models/UserModel.js';
 
 // @desc    Create new appointment
 // @route   POST /api/appointments
 // @access  Private
-exports.createAppointment = async (req, res) => {
+export const createAppointment = async (req, res) => {
   try {
     // Add user to req.body
     req.body.patient = req.user.id;
@@ -24,7 +24,7 @@ exports.createAppointment = async (req, res) => {
 // @desc    Get all appointments for logged in user
 // @route   GET /api/appointments
 // @access  Private
-exports.getAppointments = async (req, res) => {
+export const getAppointments = async (req, res) => {
   try {
     let query;
     
@@ -63,7 +63,7 @@ exports.getAppointments = async (req, res) => {
 // @desc    Get single appointment
 // @route   GET /api/appointments/:id
 // @access  Private
-exports.getAppointment = async (req, res) => {
+export const getAppointment = async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.id)
       .populate({
@@ -100,7 +100,7 @@ exports.getAppointment = async (req, res) => {
 // @desc    Update appointment
 // @route   PUT /api/appointments/:id
 // @access  Private
-exports.updateAppointment = async (req, res) => {
+export const updateAppointment = async (req, res) => {
   try {
     let appointment = await Appointment.findById(req.params.id);
     
@@ -134,7 +134,7 @@ exports.updateAppointment = async (req, res) => {
 // @desc    Delete appointment
 // @route   DELETE /api/appointments/:id
 // @access  Private
-exports.deleteAppointment = async (req, res) => {
+export const deleteAppointment = async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.id);
     
