@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
 import bcrypt from 'bcryptjs';  // Change to import
+import { Timestamp } from "mongodb";
 
 const UserSchema = new mongoose.Schema({
-  name: {
+  fullName: {
     type: String,
     required: [true, 'Please provide a name'],
   },
@@ -10,10 +11,7 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide an email'],
     unique: true,
-    match: [
-      /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/,
-      'Please provide a valid email',
-    ],
+  
   },
   password: {
     type: String,
@@ -37,7 +35,10 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-});
+},
+{timestamps:true}
+
+);
 
 // Encrypt password using bcrypt
 UserSchema.pre('save', async function (next) {

@@ -11,7 +11,7 @@ import {
 
 import { protect } from '../Middlewares/Authorization.js';
 
-const Appointment = express.Router();
+const Appointment = express();
 
 Appointment
   .route('/')

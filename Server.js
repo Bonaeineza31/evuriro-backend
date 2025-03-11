@@ -7,6 +7,7 @@ import authRoutes from './Routes/AuthRoute.js';
 import userRoutes from './Routes/UserRoute.js';
 import appointmentRoutes from './Routes/AppointmentRoute.js';
 import healthDataRoutes from './Routes/DataRoute.js';
+import mainRouter from './Routes/indexRouting.js';
 
 // Load environment variables
 dotenv.config();
@@ -21,40 +22,24 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use('/',mainRouter)
 
 // Improved MongoDB connection for serverless environments
 const dbUri = `mongodb+srv://${db_user}:${encodeURIComponent(db_pass)}@cluster0.qfmve.mongodb.net/${db_name}?retryWrites=true&w=majority&appName=Cluster0`;
 
 const connectDB = async () => {
   try {
-    // Connection options optimized for serverless
-    const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 10000,
-      connectTimeoutMS: 10000,
-      bufferCommands: false,
-    };
+  
 
-    await mongoose.connect(dbUri, options);
+    await mongoose.connect(dbUri);
     console.log('Connected to MongoDB');
   } catch (err) {
     console.error('Could not connect to MongoDB', err);
     process.exit(1);
   }
 };
-
-// Connect to MongoDB
 connectDB();
 
-// Use routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/appointments', appointmentRoutes);
-app.use('/api/health', healthDataRoutes);
-
-// Base route
 app.get('/', (req, res) => {
   res.send('Evuriro API is running');
 });
@@ -67,5 +52,4 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-// Export for serverless
 export default app;
