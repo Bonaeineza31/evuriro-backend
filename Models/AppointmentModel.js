@@ -1,6 +1,4 @@
-// models/Appointment.js
 import mongoose from "mongoose";
-
 
 const AppointmentSchema = new mongoose.Schema({
   patient: {
@@ -44,4 +42,5 @@ const AppointmentSchema = new mongoose.Schema({
   }
 });
 
-module.exports = mongoose.model('Appointment', AppointmentSchema);
+const AppointmentModel = mongoose.model('Appointment', AppointmentSchema);
+export default AppointmentModel;
