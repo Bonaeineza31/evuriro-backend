@@ -3,7 +3,7 @@ import User from '../Models/UserModel.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 
-const router = express.Router();
+const router = express();
 
 // @desc    Register user
 // @route   POST /api/users/register

@@ -3,10 +3,6 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import authRoutes from './Routes/AuthRoute.js';
-import userRoutes from './Routes/UserRoute.js';
-import appointmentRoutes from './Routes/AppointmentRoute.js';
-import healthDataRoutes from './Routes/DataRoute.js';
 import mainRouter from './Routes/indexRouting.js';
 
 // Load environment variables
@@ -22,7 +18,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use('/',mainRouter)
+app.use('/', mainRouter);
 
 // Improved MongoDB connection for serverless environments
 const dbUri = `mongodb+srv://${db_user}:${encodeURIComponent(db_pass)}@cluster0.qfmve.mongodb.net/${db_name}?retryWrites=true&w=majority&appName=Cluster0`;

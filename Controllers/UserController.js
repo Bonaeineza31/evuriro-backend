@@ -27,7 +27,7 @@ export const register = async (req, res) => {
 };
 
 // @desc    Login user
-// @route   POST /api/auth/login
+// @route   GET /api/auth/login
 // @access  Public
 export const login = async (req, res) => {
   try {
