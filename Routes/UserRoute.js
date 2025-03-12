@@ -33,13 +33,14 @@ router.post('/register', async (req, res) => {
 
     res.status(201).json({
       success: true,
-      token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
       },
+      token,
+      
     });
   } catch (error) {
     res.status(500).json({

@@ -1,79 +1,110 @@
-import User from '../Models/UserModel.js';
-import jwt from 'jsonwebtoken';
+import User from "../Models/UserModel.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
-// Function to generate token and send response
-const sendTokenResponse = (user, statusCode, res) => {
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE || '30d', // Default to 30 days if undefined
-  });
-
-  res.status(statusCode).json({
-    success: true,
-    token,
-  });
+// Generate JWT token
+const generateToken = (user) => {
+  return jwt.sign(
+    { id: user._id, email: user.email, role: user.role },
+    process.env.JWT_SECRET || "your_jwt_secret_key",
+    { expiresIn: "7d" }
+  );
 };
 
-// @desc    Register user
-// @route   POST /api/auth/register
-// @access  Public
+// Register new user
 export const register = async (req, res) => {
   try {
-    const user = await User.create(req.body);
+    const { name, email, password, role } = req.body;
 
-    sendTokenResponse(user, 201, res);
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create new user
+    const user = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role: role || "patient"
+    });
+
+    // Generate token
+    const token = generateToken(user);
+    user.tokens = { accessToken: token };
+
+    // Save user
+    await user.save();
+
+    // Return user data (excluding password)
+    res.status(201).json({
+      message: "Account created successfully!",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
   } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(500).json({ message: "Failed to register user", error: error.message });
   }
 };
 
-// @desc    Login user
-// @route   GET /api/auth/login
-// @access  Public
+// Login user
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate email & password
-    if (!email || !password) {
-      return res.status(400).json({ success: false, error: 'Please provide email and password' });
-    }
-
-    // Check for user
-    const user = await User.findOne({ email }).select('+password');
-
+    // Check if user exists
+    const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    // Check if password matches
-    const isMatch = await user.matchPassword(password);
-
+    // Check if password is correct
+    const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    sendTokenResponse(user, 200, res);
+    // Generate token
+    const token = generateToken(user);
+    
+    // Update user's token
+    user.tokens = { accessToken: token };
+    await user.save();
+
+    // Return user data
+    res.status(200).json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
-// @desc    Get current logged-in user
-// @route   GET /api/auth/me
-// @access  Private
-export const getMe = async (req, res) => {
+// Get current user
+export const getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
-
+    const user = await User.findById(req.userId).select("-password");
     if (!user) {
-      return res.status(404).json({ success: false, error: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
-
-    res.status(200).json({
-      success: true,
-      data: user,
-    });
+    res.status(200).json(user);
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };

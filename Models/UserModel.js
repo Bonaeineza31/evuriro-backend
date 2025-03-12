@@ -1,60 +1,42 @@
 import mongoose from "mongoose";
-import bcrypt from 'bcryptjs';  // Change to import
-import { Timestamp } from "mongodb";
+import bcrypt from "bcryptjs";
 
-const UserSchema = new mongoose.Schema({
-  fullName: {
+const userSchema = new mongoose.Schema({
+  name: {
     type: String,
-    required: [true, 'Please provide a name'],
+    required: true,
+    trim: true
   },
   email: {
     type: String,
-    required: [true, 'Please provide an email'],
+    required: true,
     unique: true,
-  
+    trim: true,
+    lowercase: true
   },
   password: {
     type: String,
-    required: [true, 'Please add a password'],
-    minlength: 6,
-    select: false,
+    required: true
   },
   role: {
     type: String,
     enum: ['patient', 'doctor', 'admin'],
-    default: 'patient',
+    default: 'patient'
   },
-  healthData: {
-    heartRate: { type: Number },
-    bloodPressure: { type: String },
-    temperature: { type: Number },
-    oxygenLevel: { type: Number },
-    weight: { type: Number },
+  tokens: {
+    accessToken: String
   },
   createdAt: {
     type: Date,
-    default: Date.now,
-  },
-},
-{timestamps:true}
-
-);
-
-// Encrypt password using bcrypt
-UserSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    next();
+    default: Date.now
   }
-
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Match user entered password to hashed password in database
-UserSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+// Method to check if password is correct
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
 };
 
-// Change to ES module export
-const User = mongoose.model('User', UserSchema);
+const User = mongoose.model('User', userSchema);
+
 export default User;
