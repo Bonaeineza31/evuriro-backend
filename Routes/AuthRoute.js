@@ -6,6 +6,6 @@ const Authorization = express.Router(); // Use Router() instead of express()
 
 Authorization.post('/register', register);
 Authorization.post('/login', login);
-Authorization.get('/me', protect, getMe);
+Authorization.get('/me', auth, getMe);
 
 export default Authorization;
