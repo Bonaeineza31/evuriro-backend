@@ -13,50 +13,59 @@ const generateToken = (user) => {
 
 // Register new user
 export const register = async (req, res) => {
-  try {
-    const { name, email, password, role = "patient" } = req.body;
-
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "Email already exists" });
+    try {
+      const { name, email, password, role = "patient" } = req.body;
+  
+      console.log("Incoming request:", req.body); // Debugging
+  
+      // Check if user already exists
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        console.error("User already exists:", email);
+        return res.status(400).json({ message: "Email already exists" });
+      }
+  
+      // Hash password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+  
+      // Create new user
+      const user = new User({
+        name,
+        email,
+        password: hashedPassword,
+        role
+      });
+  
+      console.log("Saving user to database:", user); // Debugging
+  
+      // Save user
+      await user.save();
+  
+      // Generate token
+      const token = generateToken(user);
+      user.tokens = [{ token }];
+      await user.save();
+  
+      console.log("User created successfully:", user); // Debugging
+  
+      // Return user data
+      res.status(201).json({
+        message: "Account created successfully!",
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role
+        },
+        token
+      });
+    } catch (error) {
+      console.error("Registration error:", error); // Print full error
+      res.status(500).json({ message: "Failed to register user", error: error.message });
     }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Create new user
-    const user = new User({
-      name,
-      email,
-      password: hashedPassword,
-      role
-    });
-
-    // Generate token
-    const token = generateToken(user);
-    user.tokens = { token };
-
-    // Save user
-    await user.save();
-
-    // Return user data
-    res.status(201).json({
-      message: "Account created successfully!",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      },
-      token
-    });
-  } catch (error) {
-    console.error("Registration error:", error);
-    res.status(500).json({ message: "Failed to register user", error: error.message });
-  }
-};
+  };
+  
 
 // Login user
 export const login = async (req, res) => {
