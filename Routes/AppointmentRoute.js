@@ -1,4 +1,4 @@
-// routes/appointmentRoutes.js
+
 import express from 'express';
 
 import {
@@ -9,7 +9,7 @@ import {
   deleteAppointment
 } from '../Controllers/Appointment.js';
 
-import { protect } from '../Middlewares/Authorization.js';
+import { protect } from '../Middlewares/auth.js';
 
 const Appointment = express();
 
