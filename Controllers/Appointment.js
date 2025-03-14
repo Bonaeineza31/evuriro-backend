@@ -20,7 +20,6 @@ export const createAppointment = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
-
 // @desc    Get all appointments for logged in user
 // @route   GET /api/appointments
 // @access  Private
