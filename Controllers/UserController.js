@@ -49,36 +49,42 @@ export const register = async (req, res) => {
     await user.save();
     
     // Create HTML content for registration confirmation email
-    const htmlContent = `
-      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-        <h2 style="color: #3498db;">Registration Successful!</h2>
-        <p>Hello ${name},</p>
-        <p>Thank you for registering with Future Focus Rwanda. Your account has been successfully created.</p>
-        
-        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; border: 1px solid #dee2e6;">
-          <p><strong>Your account details:</strong></p>
-          <p>Email: ${email}</p>
-          <p>Role: ${role}</p>
-        </div>
-        
-        <p>You can now log in to your account using your email and password.</p>
-        
-        <div style="margin-top: 30px; padding: 10px 0; border-top: 1px solid #eee;">
-          <p>Best Regards,<br>Future Focus Rwanda Team</p>
-        </div>
-      </div>
-    `;
-    
-    // Send confirmation email
-    const subject = "Welcome to Future Focus Rwanda - Registration Successful";
-    const emailSent = await sendEmail(email, subject, htmlContent);
-    
-    if (emailSent) {
-      console.log("Registration confirmation email sent to:", email);
-    } else {
-      console.log("Failed to send registration email to:", email);
-      // Note: We continue even if email fails - don't return an error to the user
-    }
+    // Create HTML content for registration confirmation email
+const htmlContent = `
+<div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+  <h2 style="color: #1E88E5;">Welcome to Evuriro Health!</h2>
+  <p>Hello ${name},</p>
+  <p>Thank you for registering with Evuriro Health. Your account has been successfully created and you now have access to our healthcare platform.</p>
+  
+  <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; border: 1px solid #dee2e6;">
+    <p><strong>Your account details:</strong></p>
+    <p>Email: ${email}</p>
+    <p>Password: ${password}</p>
+    <p>Role: ${role}</p>
+  </div>
+  
+  <div style="background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin: 20px 0;">
+    <p><strong>What you can do now:</strong></p>
+    <ul style="padding-left: 20px;">
+      <li>Schedule appointments with doctors</li>
+      <li>Track your vital signs and health metrics</li>
+      <li>Access your medical records</li>
+      <li>Find nearby hospitals</li>
+      <li>Join teleconsultations with healthcare providers</li>
+    </ul>
+  </div>
+  
+  <p>Log in to your account now to start managing your healthcare journey.</p>
+  
+  <div style="margin-top: 30px; padding: 10px 0; border-top: 1px solid #eee;">
+    <p>Best Regards,<br>Evuriro Health Team</p>
+  </div>
+</div>
+`;
+
+// Send confirmation email
+const subject = "Welcome to Evuriro Health - Your Healthcare Journey Begins";
+const emailSent = await sendEmail(email, subject, htmlContent);
     
     console.log("User created successfully:", user); // Debugging
     
