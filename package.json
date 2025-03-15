@@ -2,7 +2,7 @@
   "name": "botiga_backend",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "Server.js",
   "type": "module",
   "scripts": {
     "dev": "nodemon --exec babel-node Server.js"
