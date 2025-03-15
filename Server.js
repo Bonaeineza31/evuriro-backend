@@ -16,7 +16,7 @@ const db_pass = process.env.DB_PASS;
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5137', 
+  origin: 'https://evuriro-platform.vercel.app', 
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
