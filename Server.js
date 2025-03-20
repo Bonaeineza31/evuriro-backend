@@ -1,4 +1,3 @@
-// Server.js
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
@@ -16,7 +15,9 @@ const db_pass = process.env.DB_PASS;
 const app = express();
 
 app.use(cors({
-  origin:'http://localhost:5137',
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.FRONTEND_URL || '*' 
+    : 'http://localhost:5137',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -30,13 +31,14 @@ const dbUri = `mongodb+srv://${db_user}:${encodeURIComponent(db_pass)}@cluster0.
 
 const connectDB = async () => {
   try {
-  
-
     await mongoose.connect(dbUri);
     console.log('Connected to MongoDB');
   } catch (err) {
     console.error('Could not connect to MongoDB', err);
-    process.exit(1);
+    // Don't exit in production as this might terminate the container
+    if (process.env.NODE_ENV !== 'production') {
+      process.exit(1);
+    }
   }
 };
 connectDB();
@@ -45,11 +47,10 @@ app.get('/', (req, res) => {
   res.send('Evuriro API is running');
 });
 
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-}
+// Always listen for connections, regardless of environment
+const PORT = process.env.PORT || 5006;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 export default app;
