@@ -5,7 +5,8 @@
   "main": "Server.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon --exec babel-node Server.js"
+    "dev": "nodemon --exec babel-node Server.js",
+   "start": "node Server.js"
   },
   "engines": {
     "node": ">=14.17.0"
