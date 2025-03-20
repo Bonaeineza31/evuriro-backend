@@ -1,4 +1,5 @@
-import express from 'express';
+import
+ express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
@@ -13,10 +14,9 @@ const db_pass = process.env.DB_PASS;
 
 // Create Express app
 const app = express();
-
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? process.env.FRONTEND_URL || '*' 
+    ? ['https://evuriro-platform.vercel.app', process.env.FRONTEND_URL].filter(Boolean)
     : 'http://localhost:5137',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
