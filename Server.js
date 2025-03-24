@@ -29,36 +29,46 @@ const allowedOrigins = [
 ].filter(Boolean); // Filter out undefined values
 
 // CORS configuration - more permissive for troubleshooting
+// Update your CORS configuration in server.js
 app.use(cors({
   origin: function(origin, callback) {
-    // For development & debugging - allow requests with no origin (like Postman)
+    // Allow requests with no origin (like mobile apps, curl, Postman)
     if (!origin) {
       return callback(null, true);
     }
     
-    // Check if origin is allowed
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      // For debugging, temporarily allow all origins
-      // Remove this in production and use the commented out line instead
-      callback(null, true);
-      // callback(new Error('Not allowed by CORS'));
-    }
+    console.log("Request origin:", origin); // Log all origins for debugging
+    
+    // Allow all origins temporarily to debug
+    callback(null, true);
+    
+    // Once working, switch back to this:
+    // if (allowedOrigins.includes(origin)) {
+    //   callback(null, true);
+    // } else {
+    //   console.log('CORS blocked origin:', origin);
+    //   callback(new Error('Not allowed by CORS'));
+    // }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar']
 }));
 
 // Pre-flight OPTIONS handler
+// Add this before your routes
 app.options('*', (req, res) => {
-  // Set CORS headers for preflight requests
+  console.log("Received preflight request from:", req.headers.origin);
+  
+  // Set headers explicitly
   res.header('Access-Control-Allow-Origin', req.headers.origin);
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
   res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400'); // 24 hours
+  
+  // Respond with 200
   res.status(200).send();
 });
 
