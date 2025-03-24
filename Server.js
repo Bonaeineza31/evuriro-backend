@@ -71,6 +71,7 @@ app.options('*', (req, res) => {
   // Respond with 200
   res.status(200).send();
 });
+app.use(express.static('public'));
 
 app.use(express.json());
 
