@@ -1,5 +1,4 @@
-import
- express from 'express';
+import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
@@ -14,16 +13,28 @@ const db_pass = process.env.DB_PASS;
 
 // Create Express app
 const app = express();
-const cors =require('cors')
+
+// CORS configuration - fixed to use the imported cors
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? ['https://evuriro-platform.vercel.app', process.env.FRONTEND_URL].filter(Boolean)
+  : ['http://localhost:5137', 'http://3.93.231.111', 'http://54.197.202.33'];
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://evuriro-platform.vercel.app', process.env.FRONTEND_URL].filter(Boolean)
-    : ['http://localhost:5137','http://192.168.1.69:5500/', 'http://3.93.231.111/welcome.html', 'http://54.197.202.33/welcome.html'],
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
 
 app.use(express.json());
 app.use('/', mainRouter);
