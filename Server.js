@@ -14,59 +14,63 @@ const db_pass = process.env.DB_PASS;
 // Create Express app
 const app = express();
 
-// Define allowed origins
-const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? ['https://evuriro-platform.vercel.app', process.env.FRONTEND_URL].filter(Boolean)
-  : ['http://localhost:5137', 'http://3.93.231.111', 'http://54.197.202.33'];
+// Define allowed origins - be sure to include your frontend URLs
+const allowedOrigins = [
+  // Production origins
+  'https://evuriro-platform.vercel.app',
+  process.env.FRONTEND_URL,
+  'https://3.93.231.111',
+  'https://54.197.202.33',
+  // Development origins
+  'http://localhost:5137',
+  'http://localhost:3000',
+  'http://3.93.231.111',
+  'http://54.197.202.33'
+].filter(Boolean); // Filter out undefined values
 
-// Enable preflight requests for all routes
-app.options('*', cors({
-  origin: function(origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('Preflight blocked by CORS:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-// Regular CORS for all routes
+// CORS configuration - more permissive for troubleshooting
 app.use(cors({
   origin: function(origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    // For development & debugging - allow requests with no origin (like Postman)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    // Check if origin is allowed
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.log('Request blocked by CORS:', origin);
-      callback(new Error('Not allowed by CORS'));
+      console.log('CORS blocked origin:', origin);
+      // For debugging, temporarily allow all origins
+      // Remove this in production and use the commented out line instead
+      callback(null, true);
+      // callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 }));
 
-// Manual CORS headers for extra assurance
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-  }
+// Pre-flight OPTIONS handler
+app.options('*', (req, res) => {
+  // Set CORS headers for preflight requests
+  res.header('Access-Control-Allow-Origin', req.headers.origin);
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
   res.header('Access-Control-Allow-Credentials', 'true');
-  
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
+  res.status(200).send();
 });
 
 app.use(express.json());
+
+// Debug middleware to log requests
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url} from origin: ${req.headers.origin}`);
+  next();
+});
+
+// Apply routes
 app.use('/', mainRouter);
 
 // Improved MongoDB connection for serverless environments
@@ -86,8 +90,15 @@ const connectDB = async () => {
 };
 connectDB();
 
+// Simple health check route
 app.get('/', (req, res) => {
   res.send('Evuriro API is running');
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({ message: 'Internal server error' });
 });
 
 // Always listen for connections, regardless of environment
