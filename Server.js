@@ -14,20 +14,18 @@ const db_pass = process.env.DB_PASS;
 // Create Express app
 const app = express();
 
-// CORS configuration - fixed to use the imported cors
+// Define allowed origins
 const allowedOrigins = process.env.NODE_ENV === 'production'
   ? ['https://evuriro-platform.vercel.app', process.env.FRONTEND_URL].filter(Boolean)
   : ['http://localhost:5137', 'http://3.93.231.111', 'http://54.197.202.33'];
 
-app.use(cors({
+// Enable preflight requests for all routes
+app.options('*', cors({
   origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      console.log('Blocked by CORS:', origin);
+      console.log('Preflight blocked by CORS:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -35,6 +33,38 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Regular CORS for all routes
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Request blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Manual CORS headers for extra assurance
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 app.use(express.json());
 app.use('/', mainRouter);
