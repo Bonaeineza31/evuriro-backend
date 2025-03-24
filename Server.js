@@ -14,6 +14,7 @@ const db_pass = process.env.DB_PASS;
 
 // Create Express app
 const app = express();
+const cors =require('cors')
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? ['https://evuriro-platform.vercel.app', process.env.FRONTEND_URL].filter(Boolean)
