@@ -18,7 +18,7 @@ const cors =require('cors')
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? ['https://evuriro-platform.vercel.app', process.env.FRONTEND_URL].filter(Boolean)
-    : ['http://localhost:5137', 'http://3.93.231.111', 'http://54.197.202.33'],
+    : ['http://localhost:5137', 'http://3.93.231.111/welcome.html', 'http://54.197.202.33/welcome.html'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
