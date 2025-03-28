@@ -7,7 +7,7 @@ import {
   createAppointment,
   updateAppointment,
   deleteAppointment
-} from '../Controllers/Appointment.js';
+} from '../controllers/Appointment.js';
 
 import { protect } from '../Middlewares/auth.js';
 
