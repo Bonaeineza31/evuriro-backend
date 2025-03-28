@@ -75,6 +75,7 @@ app.use(express.static('/'));
 
 app.use(express.json());
 
+
 // Debug middleware to log requests
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url} from origin: ${req.headers.origin}`);
