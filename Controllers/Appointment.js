@@ -1,23 +1,21 @@
 // controllers/appointmentController.js
 import Appointment from '../Models/AppointmentModel.js';
-import User from '../Models/UserModel.js';
+
 
 // @desc    Create new appointment
 // @route   POST /api/appointments
 // @access  Private
 export const createAppointment = async (req, res) => {
   try {
-    // Add user to req.body
-    req.body.patient = req.user.id;
+    const appointmentData = {
+      ...req.body,
+      patient: req.user._id // Add the user ID from the JWT token
+    };
     
-    const appointment = await Appointment.create(req.body);
-    
-    res.status(201).json({
-      success: true,
-      data: appointment
-    });
+    const appointment = await Appointment.create(appointmentData);
+    res.status(201).json({ success: true, data: appointment });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 };
 // @desc    Get all appointments for logged in user
