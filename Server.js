@@ -28,6 +28,7 @@ const allowedOrigins = [
   'http://54.197.202.33'
 ].filter(Boolean); // Filter out undefined values
 
+
 // CORS configuration - more permissive for troubleshooting
 // Update your CORS configuration in server.js
 app.use(cors({
