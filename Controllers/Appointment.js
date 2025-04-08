@@ -1,15 +1,11 @@
-// controllers/appointmentController.js
 import Appointment from '../Models/AppointmentModel.js';
 
 
-// @desc    Create new appointment
-// @route   POST /api/appointments
-// @access  Private
 export const createAppointment = async (req, res) => {
   try {
     const appointmentData = {
       ...req.body,
-      patient: req.user._id // Add the user ID from the JWT token
+      patient: req.user._id
     };
     
     const appointment = await Appointment.create(appointmentData);
@@ -18,22 +14,17 @@ export const createAppointment = async (req, res) => {
     res.status(400).json({ success: false, error: error.message });
   }
 };
-// @desc    Get all appointments for logged in user
-// @route   GET /api/appointments
-// @access  Private
+
 export const getAppointments = async (req, res) => {
   try {
     let query;
     
-    // If role is patient, get only their appointments
     if (req.user.role === 'patient') {
       query = Appointment.find({ patient: req.user.id });
     } 
-    // If role is doctor, get appointments where they are the doctor
     else if (req.user.role === 'doctor') {
       query = Appointment.find({ doctor: req.user.id });
     } 
-    // If admin, get all appointments
     else {
       query = Appointment.find({});
     }
@@ -57,9 +48,6 @@ export const getAppointments = async (req, res) => {
   }
 };
 
-// @desc    Get single appointment
-// @route   GET /api/appointments/:id
-// @access  Private
 export const getAppointment = async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.id)
@@ -76,7 +64,7 @@ export const getAppointment = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Appointment not found' });
     }
     
-    // Make sure user is the appointment owner or a doctor/admin
+
     if (
       appointment.patient._id.toString() !== req.user.id && 
       appointment.doctor._id.toString() !== req.user.id &&
@@ -94,9 +82,6 @@ export const getAppointment = async (req, res) => {
   }
 };
 
-// @desc    Update appointment
-// @route   PUT /api/appointments/:id
-// @access  Private
 export const updateAppointment = async (req, res) => {
   try {
     let appointment = await Appointment.findById(req.params.id);
@@ -128,9 +113,6 @@ export const updateAppointment = async (req, res) => {
   }
 };
 
-// @desc    Delete appointment
-// @route   DELETE /api/appointments/:id
-// @access  Private
 export const deleteAppointment = async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.id);
