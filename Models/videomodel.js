@@ -5,8 +5,7 @@ const videoRoomSchema = new mongoose.Schema({
   appointmentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Appointment',
-    required: false,
-    sparse: true  // Allows multiple nulls
+    required: false
   },
 
   // Participants
@@ -111,11 +110,13 @@ const videoRoomSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for faster queries
-videoRoomSchema.index({ appointmentId: 1 });
+// Create compound index instead of single field index
+// This allows multiple null appointmentIds
+videoRoomSchema.index({ appointmentId: 1 }, { unique: true, sparse: true });
 videoRoomSchema.index({ doctorId: 1, status: 1 });
 videoRoomSchema.index({ patientId: 1, status: 1 });
 videoRoomSchema.index({ startDate: 1 });
+videoRoomSchema.index({ meetingId: 1 }, { unique: true }); // meetingId should be unique
 
 // Virtual field for room duration calculation
 videoRoomSchema.virtual('actualDuration').get(function() {

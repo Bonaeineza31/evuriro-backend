@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import VideoRoom from '../Models/videomodel.js';
+import User from '../Models/UserModel.js'; // Add this import
 
 const WHEREBY_API_KEY = process.env.WHEREBY_API_KEY;
 const WHEREBY_API_URL = 'https://api.whereby.dev/v1/meetings';
@@ -12,21 +13,18 @@ export const createVideoRoom = async (req, res) => {
       doctorId, 
       patientId, 
       scheduledTime,
-      duration = 30 // Default 30 minutes
+      duration = 30
     } = req.body;
 
-    // Validate required fields
-    if (!appointmentId || !doctorId || !patientId) {
+    if (!doctorId) {
       return res.status(400).json({ 
-        message: 'Missing required fields: appointmentId, doctorId, patientId' 
+        message: 'Missing required field: doctorId' 
       });
     }
 
-    // Calculate end date (scheduledTime + duration)
     const startDate = scheduledTime ? new Date(scheduledTime) : new Date();
     const endDate = new Date(startDate.getTime() + duration * 60000);
 
-    // Create room via Whereby API
     const wherebyResponse = await fetch(WHEREBY_API_URL, {
       method: 'POST',
       headers: {
@@ -37,7 +35,7 @@ export const createVideoRoom = async (req, res) => {
         endDate: endDate.toISOString(),
         fields: ['hostRoomUrl'],
         roomNamePrefix: '/evuriro',
-        roomMode: 'normal', // 'normal' or 'group'
+        roomMode: 'normal',
         isLocked: false
       }),
     });
@@ -53,11 +51,8 @@ export const createVideoRoom = async (req, res) => {
 
     const wherebyData = await wherebyResponse.json();
 
-    // Save room data to database
-    const videoRoom = new VideoRoom({
-      appointmentId,
+    const videoRoomData = {
       doctorId,
-      patientId,
       meetingId: wherebyData.meetingId,
       roomUrl: wherebyData.roomUrl,
       hostRoomUrl: wherebyData.hostRoomUrl,
@@ -65,8 +60,19 @@ export const createVideoRoom = async (req, res) => {
       endDate: wherebyData.endDate,
       status: 'scheduled',
       duration
-    });
+    };
 
+    // ONLY add appointmentId if it's provided and valid (to avoid null duplicates)
+    if (appointmentId && /^[0-9a-fA-F]{24}$/.test(appointmentId)) {
+      videoRoomData.appointmentId = appointmentId;
+    }
+    // DO NOT set appointmentId to null/undefined
+
+    if (patientId && /^[0-9a-fA-F]{24}$/.test(patientId)) {
+      videoRoomData.patientId = patientId;
+    }
+
+    const videoRoom = new VideoRoom(videoRoomData);
     await videoRoom.save();
 
     res.status(201).json({
@@ -74,8 +80,8 @@ export const createVideoRoom = async (req, res) => {
       room: {
         roomId: videoRoom._id,
         meetingId: videoRoom.meetingId,
-        patientRoomUrl: wherebyData.roomUrl, // Patient joins here
-        doctorRoomUrl: wherebyData.hostRoomUrl, // Doctor joins here (host privileges)
+        patientRoomUrl: wherebyData.roomUrl,
+        doctorRoomUrl: wherebyData.hostRoomUrl,
         startDate: videoRoom.startDate,
         endDate: videoRoom.endDate,
         duration: videoRoom.duration
@@ -132,7 +138,6 @@ export const getVideoRoomByAppointment = async (req, res) => {
       });
     }
 
-    // Check if room is still valid
     if (new Date() > new Date(videoRoom.endDate)) {
       return res.status(410).json({ 
         message: 'Video room has expired',
@@ -153,11 +158,25 @@ export const getVideoRoomByAppointment = async (req, res) => {
   }
 };
 
-// Update room status (started, completed, cancelled)
+// Update room status
 export const updateRoomStatus = async (req, res) => {
   try {
     const { roomId } = req.params;
     const { status, actualStartTime, actualEndTime } = req.body;
+
+    // Validate roomId
+    if (!roomId || roomId === 'undefined' || roomId === 'null') {
+      return res.status(400).json({ 
+        message: 'Invalid room ID provided' 
+      });
+    }
+
+    // Validate ObjectId format
+    if (!/^[0-9a-fA-F]{24}$/.test(roomId)) {
+      return res.status(400).json({ 
+        message: 'Invalid room ID format' 
+      });
+    }
 
     const validStatuses = ['scheduled', 'active', 'completed', 'cancelled', 'no-show'];
     if (!validStatuses.includes(status)) {
@@ -194,7 +213,7 @@ export const updateRoomStatus = async (req, res) => {
   }
 };
 
-// Delete video room (also deletes from Whereby)
+// Delete video room
 export const deleteVideoRoom = async (req, res) => {
   try {
     const { roomId } = req.params;
@@ -205,7 +224,6 @@ export const deleteVideoRoom = async (req, res) => {
       return res.status(404).json({ message: 'Video room not found' });
     }
 
-    // Delete from Whereby API
     const wherebyDeleteUrl = `${WHEREBY_API_URL}/${videoRoom.meetingId}`;
     const wherebyResponse = await fetch(wherebyDeleteUrl, {
       method: 'DELETE',
@@ -216,10 +234,8 @@ export const deleteVideoRoom = async (req, res) => {
 
     if (!wherebyResponse.ok && wherebyResponse.status !== 404) {
       console.error('Whereby deletion failed:', await wherebyResponse.text());
-      // Continue with local deletion even if Whereby fails
     }
 
-    // Delete from database
     await VideoRoom.findByIdAndDelete(roomId);
 
     res.status(200).json({
@@ -298,29 +314,53 @@ export const joinRoomWithCode = async (req, res) => {
       return res.status(400).json({ message: 'Room code is required' });
     }
 
-    // Find room where meetingId ends with the room code (last 6 chars)
-    const rooms = await VideoRoom.find({ status: { $in: ['scheduled', 'active'] } })
-      .populate('doctorId', 'name email specialty');
+    console.log('🔍 Searching for room with code:', roomCode);
 
-    const room = rooms.find(r => 
-      r.meetingId.slice(-6).toUpperCase() === roomCode.toUpperCase()
-    );
+    const rooms = await VideoRoom.find({ status: { $in: ['scheduled', 'active'] } })
+      .populate('doctorId', 'name email specialty')
+      .lean();
+
+    console.log('📋 Active/Scheduled rooms in database:', rooms.length);
+    
+    if (rooms.length === 0) {
+      return res.status(404).json({ 
+        message: 'No active rooms available. Please ask your doctor to generate a new room code.' 
+      });
+    }
+    
+    // Log all room codes for debugging
+    rooms.forEach(room => {
+      const lastSix = room.meetingId ? room.meetingId.slice(-6).toUpperCase() : 'NO MEETING ID';
+      console.log(`Room ${room._id}: Code=${lastSix} | Status=${room.status} | Expired=${new Date() > new Date(room.endDate)}`);
+    });
+
+    // Find matching room
+    const room = rooms.find(r => {
+      if (!r.meetingId) return false;
+      const lastSix = r.meetingId.slice(-6).toUpperCase();
+      return lastSix === roomCode.toUpperCase();
+    });
 
     if (!room) {
+      console.log('❌ No matching room found for code:', roomCode);
       return res.status(404).json({ 
-        message: 'Invalid room code or room has expired' 
+        message: 'Invalid room code. Please check the code and try again.' 
       });
     }
 
-    // Check if room is still valid
+    // Check if room has expired
     if (new Date() > new Date(room.endDate)) {
+      console.log(' Room has expired:', room.endDate);
       return res.status(410).json({ 
-        message: 'This room has expired' 
+        message: 'This room has expired. Please ask the doctor to generate a new room code.',
+        expired: true 
       });
     }
+
+    console.log(' Room found successfully:', room._id);
 
     res.status(200).json({
-      message: 'Room found',
+      message: 'Room found successfully',
       room: {
         roomId: room._id,
         meetingId: room.meetingId,
@@ -335,7 +375,7 @@ export const joinRoomWithCode = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error joining room with code:', error);
+    console.error(' Error joining room with code:', error);
     res.status(500).json({ 
       message: 'Server error while joining room',
       error: error.message 
